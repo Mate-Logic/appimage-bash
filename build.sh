@@ -189,13 +189,17 @@ echo "==> Build $APP_SHORT_NAME AppImage"
 wget https://github.com/AppImage/Appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
 chmod +x *.AppImage
 
+# Set the AppImage name explicitly to avoid issues with multiple desktop files
+export APPIMAGETOOL_APP_NAME="${APP_SHORT_NAME// /_}"
+export ARCH="x86_64"
+
 if [ "$GITHUB_RUNNING_ACTION" == true ]; then
-  ARCH=x86_64 ./appimagetool-x86_64.AppImage --comp zstd "$APP_DIRECTORY" -n -u "gh-releases-zsync|$GH_USER|$GH_REPO|latest|$APP_SHORT_NAME*.AppImage.zsync"
+  ./appimagetool-x86_64.AppImage --comp zstd "$APP_DIRECTORY" -n -u "gh-releases-zsync|$GH_USER|$GH_REPO|latest|$APP_SHORT_NAME*.AppImage.zsync"
   echo "APP_NAME=$APP_NAME" >> "$GITHUB_ENV"
   echo "APP_SHORT_NAME=$APP_SHORT_NAME" >> "$GITHUB_ENV"
   echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
 else
-  ARCH=x86_64 ./appimagetool-x86_64.AppImage --comp zstd "$APP_DIRECTORY" -n
+  ./appimagetool-x86_64.AppImage --comp zstd "$APP_DIRECTORY" -n
 fi
 
 mkdir dist
