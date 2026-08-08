@@ -58,6 +58,37 @@ APP_DIRECTORY="AppDir"
 BIN_DIRECTORY=$APP_DIRECTORY/usr/bin
 rm -rf AppDir
 
+# Retry downloads on transient upstream failures. Everything here runs under
+# set -e, so one bad response from an upstream aborts the whole build.
+#
+# This re-runs the whole wget command rather than using --retry-on-http-error.
+# After a redirect, wget's own retries only re-request the final target, not
+# the original URL. That cannot recover the failure this guards against: a
+# version endpoint answering 302 with a broken Location, where retrying the
+# dead target is pointless and only re-requesting the original URL re-rolls
+# the redirect.
+retry_wget() {
+  local attempt status=1
+  for attempt in 1 2 3 4 5; do
+    # --tries bounds wget's own retries so a hard-down host cannot stretch the
+    # five attempts below into a very long build.
+    # The else branch is required to capture wget's exit status: an if whose
+    # condition fails with no else evaluates to 0, which would make this
+    # function report success after a failed download.
+    if wget --tries=3 --retry-connrefused --waitretry=10 "$@"; then
+      return 0
+    else
+      status=$?
+    fi
+    if [ "$attempt" -lt 5 ]; then
+      echo "==> Download attempt $attempt failed (wget exit $status), retrying in 15s"
+      sleep 15
+    fi
+  done
+  echo "==> Download failed after 5 attempts (wget exit $status)"
+  return "$status"
+}
+
 mkdir $BIN_DIRECTORY -p
 mkdir -p $APP_DIRECTORY/usr/share/icons/hicolor/{128x128,256x256,512x512}/apps/
 
@@ -95,7 +126,7 @@ if [ -z "$APP_NAME" ]; then
 fi
 
 echo "==> Download $APP_SHORT_NAME"
-wget -O "$APP_SHORT_NAME".tar.gz "$APP_DOWNLOAD_URL"
+retry_wget -O "$APP_SHORT_NAME".tar.gz "$APP_DOWNLOAD_URL"
 
 echo "==> Extract $APP_SHORT_NAME"
 tar -xzvf "$APP_SHORT_NAME".tar.gz --strip-components=1 -C $APP_DEPLOY && rm -r *.tar.gz
@@ -150,7 +181,7 @@ else
 fi
 
 echo "==> Fetch default AppRun binary"
-wget -O $APP_DIRECTORY/AppRun https://raw.githubusercontent.com/AppImage/AppImageKit/master/resources/AppRun
+retry_wget -O $APP_DIRECTORY/AppRun https://raw.githubusercontent.com/AppImage/AppImageKit/master/resources/AppRun
 chmod +x $APP_DIRECTORY/AppRun
 
 echo "==> Setup icons and desktop for $APP_SHORT_NAME AppImage"
@@ -186,7 +217,7 @@ fi
 
 echo "==> Build $APP_SHORT_NAME AppImage"
 # Fetch AppImageTool.
-wget https://github.com/AppImage/Appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+retry_wget https://github.com/AppImage/Appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
 chmod +x *.AppImage
 
 # Set the AppImage name explicitly to avoid issues with multiple desktop files
