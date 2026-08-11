@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Construir AppImage
         id: appimage
-        uses: valicm/appimage-bash@main
+        uses: Mate-Logic/appimage-bash@main
         with:
           version_url: 'https://example.org/downloads/my-app.tar.gz'
           version_file: 'my-app/version.txt'
@@ -102,7 +102,7 @@ Para comparar la versión descargada con la última release:
 
 ```bash
 GITHUB_ACTIONS=true \
-GITHUB_REPOSITORY=usuario/repositorio \
+    GITHUB_REPOSITORY=Mate-Logic/appimage-bash \
 python3 build.py verify
 ```
 
@@ -110,12 +110,13 @@ Para comprobar solamente la versión:
 
 ```bash
 GITHUB_ACTIONS=true \
-GITHUB_REPOSITORY=usuario/repositorio \
+    GITHUB_REPOSITORY=Mate-Logic/appimage-bash \
 python3 build.py verify version-only
 ```
 
 Los archivos resultantes se colocan en `dist/`. Las barras de progreso se
-muestran cuando la salida es una terminal interactiva; en CI se evita generar
+muestran cuando la salida es una terminal interactiva; en CI se evitan los
+caracteres de control innecesarios.
 
 ### Configuración de `app.desktop`
 
@@ -219,7 +220,7 @@ No third-party Python packages are required.
 - uses: actions/checkout@v4
 - name: Build AppImage
   id: appimage
-  uses: valicm/appimage-bash@main
+  uses: Mate-Logic/appimage-bash@main
   with:
     version_url: 'https://example.org/downloads/my-app.tar.gz'
     version_file: 'my-app/version.txt'

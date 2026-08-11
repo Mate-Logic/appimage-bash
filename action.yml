@@ -1,6 +1,6 @@
 name: 'AppImage Python'
 description: 'Build AppImage packages from tar.gz archives'
-author: 'valicm'
+author: 'Mate-Logic'
 branding:
   icon: activity
   color: white
