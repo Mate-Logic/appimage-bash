@@ -170,13 +170,17 @@ def configuration(desktop: Path) -> dict[str, str]:
 
 
 def find_file(root: Path, name: str) -> Path:
-    """Busca un único archivo y rechaza resultados ambiguos o inexistentes."""
+    """Find the shallowest matching file and reject equal-priority matches."""
     matches = [path for path in root.rglob(name) if path.is_file()]
     if not matches:
         raise BuildError(f"No se encontró '{name}' dentro de {root}.")
-    if len(matches) > 1:
-        raise BuildError(f"Se encontraron varios archivos llamados '{name}': {matches}")
-    return matches[0]
+    shallowest = min(len(path.relative_to(root).parts) for path in matches)
+    preferred = [
+        path for path in matches if len(path.relative_to(root).parts) == shallowest
+    ]
+    if len(preferred) > 1:
+        raise BuildError(f"Se encontraron varios archivos llamados '{name}': {preferred}")
+    return preferred[0]
 
 
 def extract_archive(archive: Path, destination: Path) -> None:

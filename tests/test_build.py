@@ -106,6 +106,20 @@ class BuildTests(unittest.TestCase):
             with self.assertRaisesRegex(build.BuildError, "ruta insegura"):
                 build.extract_archive(archive, destination)
 
+    def test_find_file_prefiere_la_coincidencia_mas_cercana(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            preferred = root / "usr" / "bin" / "antigravity-ide"
+            nested = root / "usr" / "bin" / "bin" / "antigravity-ide"
+            completion = (
+                root / "usr" / "bin" / "resources" / "completions" / "antigravity-ide"
+            )
+            for path in (preferred, nested, completion):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("binary", encoding="utf-8")
+
+            self.assertEqual(build.find_file(root, "antigravity-ide"), preferred)
+
     def test_package_root_aplana_un_directorio_raiz(self):
         with TemporaryDirectory() as temporary:
             directory = Path(temporary)
