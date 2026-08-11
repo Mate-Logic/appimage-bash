@@ -141,6 +141,8 @@ def read_desktop(path: Path) -> dict[str, str]:
         raise BuildError(f"No existe el archivo de configuración: {path}")
     values: dict[str, str] = {}
     for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("[") and line != "[Desktop Entry]":
+            break
         if "=" in line and not line.lstrip().startswith("#"):
             key, value = line.split("=", 1)
             values[key.strip()] = value.strip()

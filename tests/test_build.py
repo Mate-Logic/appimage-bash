@@ -69,6 +69,19 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(values["VersionUrl"], "https://example.test/a=b")
         self.assertNotIn("# comentario", values)
 
+    def test_read_desktop_ignora_acciones_del_escritorio(self):
+        with TemporaryDirectory() as temporary:
+            desktop = Path(temporary) / "app.desktop"
+            desktop.write_text(
+                "[Desktop Entry]\nName=AntigravityIDE\n"
+                "[Desktop Action new-empty-window]\nName=New Empty Window\n",
+                encoding="utf-8",
+            )
+
+            values = build.read_desktop(desktop)
+
+        self.assertEqual(values["Name"], "AntigravityIDE")
+
     def test_configuration_falla_si_falta_una_propiedad(self):
         with TemporaryDirectory() as temporary:
             desktop = Path(temporary) / "app.desktop"
