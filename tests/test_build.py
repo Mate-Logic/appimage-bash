@@ -1,4 +1,5 @@
 import os
+import hashlib
 import tarfile
 import unittest
 from pathlib import Path
@@ -9,6 +10,40 @@ import build
 
 
 class BuildTests(unittest.TestCase):
+    def test_download_verifies_sha256(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source.tar.gz"
+            destination = root / "destination.tar.gz"
+            source.write_bytes(b"trusted archive")
+
+            with patch.object(build, "urlopen") as open_url:
+                response = open_url.return_value.__enter__.return_value
+                response.headers = {"Content-Length": "15"}
+                response.read.side_effect = [b"trusted archive", b""]
+                build.download(
+                    "https://example.test/archive.tar.gz",
+                    destination,
+                    "archive",
+                    hashlib.sha256(b"trusted archive").hexdigest(),
+                )
+
+            self.assertEqual(destination.read_bytes(), b"trusted archive")
+
+    def test_download_rejects_wrong_sha256(self):
+        with TemporaryDirectory() as temporary:
+            destination = Path(temporary) / "destination.tar.gz"
+            with patch.object(build, "urlopen") as open_url:
+                response = open_url.return_value.__enter__.return_value
+                response.headers = {}
+                response.read.side_effect = [b"tampered", b""]
+                with self.assertRaisesRegex(build.BuildError, "SHA-256 mismatch"):
+                    build.download(
+                        "https://example.test/archive.tar.gz",
+                        destination,
+                        "archive",
+                        "0" * 64,
+                    )
     def test_read_desktop_ignora_comentarios_y_conserva_valores(self):
         with TemporaryDirectory() as temporary:
             desktop = Path(temporary) / "app.desktop"

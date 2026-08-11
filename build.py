@@ -10,6 +10,7 @@ proyecto y no se copian al desktop final.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 import shlex
@@ -38,6 +39,10 @@ class BuildError(RuntimeError):
     """Error controlado que puede mostrarse directamente al usuario."""
 
 
+class ChecksumError(BuildError):
+    """The downloaded file does not match its configured digest."""
+
+
 def log(message: str) -> None:
     """Muestra una etapa del proceso con un formato uniforme."""
     print(f"==> {message}", flush=True)
@@ -56,7 +61,7 @@ def progress(label: str, current: int, total: int | None) -> None:
         print()
 
 
-def download(url: str, destination: Path, label: str) -> None:
+def download(url: str, destination: Path, label: str, expected_sha256: str = "") -> None:
     """Descarga un archivo con reintentos y una barra de progreso.
 
     El archivo se escribe primero con extensión ``.part`` para no reutilizar un
@@ -71,15 +76,25 @@ def download(url: str, destination: Path, label: str) -> None:
             if partial.exists():
                 partial.unlink()
             request = Request(url, headers={"User-Agent": "appimage-python-builder"})
+            digest = hashlib.sha256()
             with urlopen(request, timeout=60) as response, partial.open("wb") as file:
                 total = int(response.headers.get("Content-Length", 0)) or None
                 received = 0
                 while chunk := response.read(1024 * 1024):
                     file.write(chunk)
+                    digest.update(chunk)
                     received += len(chunk)
                     progress(label, received, total)
+            actual_sha256 = digest.hexdigest()
+            if expected_sha256 and actual_sha256 != expected_sha256.lower():
+                raise ChecksumError(
+                    f"SHA-256 mismatch for {label}: expected {expected_sha256}, "
+                    f"got {actual_sha256}"
+                )
             partial.replace(destination)
             return
+        except ChecksumError:
+            raise
         except (HTTPError, URLError, TimeoutError, OSError) as error:
             if attempt == DOWNLOAD_ATTEMPTS:
                 raise BuildError(
@@ -280,7 +295,12 @@ def main() -> int:
         deploy.mkdir()
         archive = work / f"{short_name}.tar.gz"
         log(f"Descargando {short_name}")
-        download(values["VersionUrl"], archive, "Paquete")
+        download(
+            values["VersionUrl"],
+            archive,
+            "Paquete",
+            os.getenv("INPUT_VERSION_SHA256", "").strip(),
+        )
         log(f"Extrayendo {short_name}")
         extract_archive(archive, deploy)
         package = package_root(deploy)

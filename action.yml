@@ -14,6 +14,9 @@ inputs:
   version_icon:
     description: 'Name of the app icon'
     required: true
+  version_sha256:
+    description: 'Expected SHA-256 digest of the downloaded tar.gz archive'
+    required: false
   version_directory:
     description: 'If specific directory is required'
     required: false
@@ -55,6 +58,7 @@ runs:
         INPUT_VERSION_URL: ${{ inputs.version_url }}
         INPUT_VERSION_FILE: ${{ inputs.version_file }}
         INPUT_VERSION_ICON: ${{ inputs.version_icon }}
+        INPUT_VERSION_SHA256: ${{ inputs.version_sha256 }}
         INPUT_VERSION_DIRECTORY: ${{ inputs.version_directory }}
         INPUT_VERSION_BASH: ${{ inputs.version_bash }}
         INPUT_VERSION_CHECK: ${{ inputs.version_check }}
