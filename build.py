@@ -108,6 +108,21 @@ def download(url: str, destination: Path, label: str, expected_sha256: str = "")
             time.sleep(5)
 
 
+def verify_sha256(path: Path, expected_sha256: str, label: str) -> None:
+    """Verify an existing file before it enters the build pipeline."""
+    if not expected_sha256:
+        return
+    digest = hashlib.sha256()
+    with path.open("rb") as file:
+        while chunk := file.read(1024 * 1024):
+            digest.update(chunk)
+    actual_sha256 = digest.hexdigest()
+    if actual_sha256 != expected_sha256.lower():
+        raise ChecksumError(
+            f"SHA-256 mismatch for {label}: expected {expected_sha256}, got {actual_sha256}"
+        )
+
+
 def run(
     command: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None
 ) -> None:
@@ -295,12 +310,16 @@ def main() -> int:
         deploy.mkdir()
         archive = work / f"{short_name}.tar.gz"
         log(f"Descargando {short_name}")
-        download(
-            values["VersionUrl"],
-            archive,
-            "Paquete",
-            os.getenv("INPUT_VERSION_SHA256", "").strip(),
-        )
+        expected_sha256 = os.getenv("INPUT_VERSION_SHA256", "").strip()
+        configured_archive = os.getenv("INPUT_VERSION_ARCHIVE", "").strip()
+        if configured_archive:
+            source_archive = Path(configured_archive).resolve()
+            if not source_archive.is_file():
+                raise BuildError(f"No existe el archivo local configurado: {source_archive}")
+            verify_sha256(source_archive, expected_sha256, "Paquete")
+            shutil.copy2(source_archive, archive)
+        else:
+            download(values["VersionUrl"], archive, "Paquete", expected_sha256)
         log(f"Extrayendo {short_name}")
         extract_archive(archive, deploy)
         package = package_root(deploy)

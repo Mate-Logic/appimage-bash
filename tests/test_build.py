@@ -44,6 +44,17 @@ class BuildTests(unittest.TestCase):
                         "archive",
                         "0" * 64,
                     )
+
+    def test_verify_sha256_accepts_existing_archive(self):
+        with TemporaryDirectory() as temporary:
+            archive = Path(temporary) / "archive.tar.gz"
+            archive.write_bytes(b"trusted archive")
+            build.verify_sha256(
+                archive,
+                hashlib.sha256(b"trusted archive").hexdigest(),
+                "archive",
+            )
+
     def test_read_desktop_ignora_comentarios_y_conserva_valores(self):
         with TemporaryDirectory() as temporary:
             desktop = Path(temporary) / "app.desktop"

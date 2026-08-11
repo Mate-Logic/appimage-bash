@@ -91,6 +91,7 @@ Ejemplo de uso de un output:
 | `version_file` | Sí | Archivo que contiene la versión dentro del paquete. |
 | `version_icon` | Sí | Nombre del icono que se utilizará. |
 | `version_sha256` | No | SHA-256 esperado del archivo descargado. Si se indica, el build falla ante cualquier diferencia. |
+| `version_archive` | No | Ruta a un archivo `.tar.gz` local previamente descargado; evita una segunda descarga y también se valida con `version_sha256`. |
 | `version_directory` | No | Ruta relativa dentro de `AppDir`; por defecto `usr/bin`. |
 | `version_bash` | No | Comando que recibe el archivo de versión por stdin y devuelve la versión. |
 | `version_check` | Sí | Usa `verify` para consultar la última release. Por defecto `verify`. |
@@ -263,7 +264,7 @@ No third-party Python packages are required.
 ```
 
 Available inputs are `version_url`, `version_file`, `version_icon`,
-`version_sha256`, `version_directory`, `version_bash`, `version_check`, `version_only`, and
+`version_sha256`, `version_archive`, `version_directory`, `version_bash`, `version_check`, `version_only`, and
 `update_information`. In GitHub Actions, `auto` points to the latest release
 assets using `gh-releases-zsync`; use `none` to disable it. The action passes
 this value to `appimagetool` with `-u`.
