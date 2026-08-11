@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Construir AppImage
         id: appimage
-        uses: Mate-Logic/appimage-bash@main
+        uses: Mate-Logic/appimage-python@main
         with:
           version_url: 'https://example.org/downloads/my-app.tar.gz'
           version_file: 'my-app/version.txt'
@@ -102,7 +102,7 @@ Para comparar la versión descargada con la última release:
 
 ```bash
 GITHUB_ACTIONS=true \
-    GITHUB_REPOSITORY=Mate-Logic/appimage-bash \
+    GITHUB_REPOSITORY=Mate-Logic/appimage-python \
 python3 build.py verify
 ```
 
@@ -110,7 +110,7 @@ Para comprobar solamente la versión:
 
 ```bash
 GITHUB_ACTIONS=true \
-    GITHUB_REPOSITORY=Mate-Logic/appimage-bash \
+    GITHUB_REPOSITORY=Mate-Logic/appimage-python \
 python3 build.py verify version-only
 ```
 
@@ -228,7 +228,7 @@ No third-party Python packages are required.
 - uses: actions/checkout@v4
 - name: Build AppImage
   id: appimage
-  uses: Mate-Logic/appimage-bash@main
+  uses: Mate-Logic/appimage-python@main
   with:
     version_url: 'https://example.org/downloads/my-app.tar.gz'
     version_file: 'my-app/version.txt'
