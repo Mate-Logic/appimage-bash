@@ -217,6 +217,27 @@ def github_latest_version(app_name: str) -> str | None:
     return release_name.removeprefix(prefix) if release_name else None
 
 
+def update_information(short_name: str) -> str | None:
+    """Obtiene la referencia de actualización para appimagetool.
+
+    ``auto`` usa los assets de la última release de GitHub. ``none`` desactiva
+    la referencia; cualquier otro valor se pasa directamente a appimagetool.
+    """
+    configured = os.getenv("INPUT_UPDATE_INFORMATION", "auto").strip()
+    if configured.lower() in {"none", "false", "off"}:
+        return None
+    if configured and configured.lower() != "auto":
+        return configured
+    if os.getenv("GITHUB_ACTIONS", "").lower() != "true":
+        return None
+    repository = os.getenv("GITHUB_REPOSITORY", "")
+    if not repository or "/" not in repository:
+        return None
+    owner, name = repository.split("/", 1)
+    prefix = short_name.replace(" ", "_")
+    return f"gh-releases-zsync|{owner}|{name}|latest|{prefix}*.AppImage.zsync"
+
+
 def write_action_output(name: str, value: str) -> None:
     """Publica un output moderno de GitHub Actions cuando corresponde."""
     output_file = os.getenv("GITHUB_OUTPUT")
@@ -320,7 +341,11 @@ def main() -> int:
         env = os.environ.copy()
         env.update({"ARCH": "x86_64", "APPIMAGETOOL_APP_NAME": short_name.replace(" ", "_")})
         log(f"Construyendo {short_name} AppImage")
-        run([str(tool), "--comp", "zstd", str(app_dir), "-n"], env=env)
+        command = [str(tool), "--comp", "zstd", str(app_dir), "-n"]
+        update_url = update_information(short_name)
+        if update_url:
+            command.extend(["-u", update_url])
+        run(command, env=env)
 
     dist.mkdir(exist_ok=True)
     prefix = short_name.replace(" ", "_")

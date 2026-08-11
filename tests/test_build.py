@@ -92,6 +92,25 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(output.read_text(encoding="utf-8"), "app_update_needed=false\n")
             self.assertEqual(environment.read_text(encoding="utf-8"), "APP_UPDATE_NEEDED=false\n")
 
+    def test_update_information_genera_referencia_de_github(self):
+        with patch.dict(
+            os.environ,
+            {
+                "GITHUB_ACTIONS": "true",
+                "GITHUB_REPOSITORY": "owner/repository",
+                "INPUT_UPDATE_INFORMATION": "auto",
+            },
+            clear=False,
+        ):
+            self.assertEqual(
+                build.update_information("Mi App"),
+                "gh-releases-zsync|owner|repository|latest|Mi_App*.AppImage.zsync",
+            )
+
+    def test_update_information_puede_desactivarse(self):
+        with patch.dict(os.environ, {"INPUT_UPDATE_INFORMATION": "none"}, clear=False):
+            self.assertIsNone(build.update_information("Mi App"))
+
 
 if __name__ == "__main__":
     unittest.main()

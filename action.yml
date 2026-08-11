@@ -28,6 +28,10 @@ inputs:
     description: 'If we need only version and then stop execution'
     required: true
     default: 'update'
+  update_information:
+    description: 'AppImage update information; auto uses the latest GitHub release, none disables it'
+    required: false
+    default: 'auto'
 outputs:
   app_update_needed:
     value: ${{ steps.build.outputs.app_update_needed }}
@@ -55,3 +59,4 @@ runs:
         INPUT_VERSION_BASH: ${{ inputs.version_bash }}
         INPUT_VERSION_CHECK: ${{ inputs.version_check }}
         INPUT_VERSION_ONLY: ${{ inputs.version_only }}
+        INPUT_UPDATE_INFORMATION: ${{ inputs.update_information }}

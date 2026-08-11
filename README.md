@@ -23,6 +23,10 @@ El constructor automatiza el proceso completo:
 9. Copia los archivos `.desktop` y elimina la configuración interna.
 10. Ejecuta `appimagetool` y deja los artefactos en `dist/`.
 
+Cuando se ejecuta como GitHub Action, genera por defecto la información de
+actualización de AppImage apuntando a los assets de la última release del
+repositorio (`gh-releases-zsync`).
+
 ### Requisitos
 
 - Linux.
@@ -60,6 +64,7 @@ jobs:
           version_icon: 'my-app/resources/icon.png'
           version_check: 'verify'
           version_only: 'update'
+          update_information: 'auto'
 ```
 
 La action recibe la configuración mediante sus inputs y genera estos outputs:
@@ -89,6 +94,27 @@ Ejemplo de uso de un output:
 | `version_bash` | No | Comando que recibe el archivo de versión por stdin y devuelve la versión. |
 | `version_check` | Sí | Usa `verify` para consultar la última release. Por defecto `verify`. |
 | `version_only` | Sí | Usa `version-only` para comprobar sin construir. Por defecto `update`. |
+| `update_information` | No | Referencia para actualizaciones de AppImage. `auto` apunta a la última release de GitHub; `none` la desactiva. |
+
+### Actualizaciones de AppImage
+
+La opción `update_information` se pasa a `appimagetool` mediante `-u`. Con el
+valor `auto`, una ejecución en GitHub Actions genera una referencia como:
+
+```text
+gh-releases-zsync|Mate-Logic|mi-repositorio|latest|MiAplicacion*.AppImage.zsync
+```
+
+El workflow de release debe publicar en la release ambos archivos generados:
+la `.AppImage` y su `.AppImage.zsync`. La referencia no publica archivos ni
+actualiza la aplicación por sí misma; solo permite que clientes compatibles
+encuentren el asset de la última release. Para un repositorio o patrón
+personalizado se puede pasar directamente el formato aceptado por
+`appimagetool`, por ejemplo:
+
+```yaml
+update_information: 'gh-releases-zsync|owner|repo|latest|MiAplicacion*.AppImage.zsync'
+```
 
 ### Uso local
 
@@ -236,7 +262,10 @@ No third-party Python packages are required.
 ```
 
 Available inputs are `version_url`, `version_file`, `version_icon`,
-`version_directory`, `version_bash`, `version_check`, and `version_only`.
+`version_directory`, `version_bash`, `version_check`, `version_only`, and
+`update_information`. In GitHub Actions, `auto` points to the latest release
+assets using `gh-releases-zsync`; use `none` to disable it. The action passes
+this value to `appimagetool` with `-u`.
 The action exposes `app_update_needed`, `app_name`, `app_short_name`, and
 `app_version` outputs.
 
