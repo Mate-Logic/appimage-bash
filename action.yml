@@ -1,5 +1,5 @@
-name: 'AppImage bash'
-description: 'Used to generate AppImage packages'
+name: 'AppImage Python'
+description: 'Build AppImage packages from tar.gz archives'
 author: 'valicm'
 branding:
   icon: activity
@@ -30,26 +30,28 @@ inputs:
     default: 'update'
 outputs:
   app_update_needed:
-    value: 'true'
+    value: ${{ steps.build.outputs.app_update_needed }}
     description: 'Decision if the AppImage needs to be updated'
+  app_name:
+    value: ${{ steps.build.outputs.app_name }}
+    description: 'Application name'
+  app_short_name:
+    value: ${{ steps.build.outputs.app_short_name }}
+    description: 'Application short name'
+  app_version:
+    value: ${{ steps.build.outputs.app_version }}
+    description: 'Built application version'
 runs:
   using: "composite"
   steps:
-    - run: echo "INPUT_VERSION_URL=${{ inputs.version_url }}" >> $GITHUB_ENV
+    - id: build
+      run: python3 $GITHUB_ACTION_PATH/build.py
       shell: bash
-    - run: echo "INPUT_VERSION_FILE=${{ inputs.version_file }}" >> $GITHUB_ENV
-      shell: bash
-    - run: echo "INPUT_VERSION_ICON=${{ inputs.version_icon }}" >> $GITHUB_ENV
-      shell: bash
-    - run: echo "INPUT_VERSION_DIRECTORY=${{ inputs.version_directory }}" >> $GITHUB_ENV
-      shell: bash
-    - run: echo "INPUT_VERSION_BASH=${{ inputs.version_bash }}" >> $GITHUB_ENV
-      shell: bash
-    - run: echo "INPUT_VERSION_CHECK=${{ inputs.version_check }}" >> $GITHUB_ENV
-      shell: bash
-    - run: echo "INPUT_VERSION_ONLY=${{ inputs.version_only }}" >> $GITHUB_ENV
-      shell: bash
-    - run: chmod +x ${{ github.action_path }}/build.sh
-      shell: bash
-    - run: $GITHUB_ACTION_PATH/build.sh
-      shell: bash
+      env:
+        INPUT_VERSION_URL: ${{ inputs.version_url }}
+        INPUT_VERSION_FILE: ${{ inputs.version_file }}
+        INPUT_VERSION_ICON: ${{ inputs.version_icon }}
+        INPUT_VERSION_DIRECTORY: ${{ inputs.version_directory }}
+        INPUT_VERSION_BASH: ${{ inputs.version_bash }}
+        INPUT_VERSION_CHECK: ${{ inputs.version_check }}
+        INPUT_VERSION_ONLY: ${{ inputs.version_only }}
