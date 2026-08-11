@@ -191,6 +191,14 @@ segura, aplanado de paquetes, detección de versión y outputs de Actions.
 
 Este proyecto se distribuye bajo la [Licencia MIT](LICENSE).
 
+### Origen y mantenimiento
+
+Este repositorio comenzó como un fork de
+[`valicm/appimage-bash`](https://github.com/valicm/appimage-bash). La
+migración a Python, las mejoras de validación, los tests y el mantenimiento
+actual son responsabilidad de Mate-Logic. Se conserva la licencia MIT y la
+atribución del proyecto original.
+
 <a id="english"></a>
 
 ## English
@@ -268,3 +276,11 @@ target is `x86_64`.
 ### License
 
 This project is released under the [MIT License](LICENSE).
+
+### Origin and maintenance
+
+This repository started as a fork of
+[`valicm/appimage-bash`](https://github.com/valicm/appimage-bash). The Python
+migration, validation improvements, tests, and current maintenance are
+provided by Mate-Logic. The original project's MIT license and attribution
+are preserved.
